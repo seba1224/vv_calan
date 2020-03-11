@@ -1,0 +1,114 @@
+here we have a short description of each one of the files:
+
+    -calan_vv:          contains the main class that calls the other scripts,
+                        it contains several function to make the life more easy
+                        (some other are still in test and has to be debbugged 
+                        but this is the structure that has to have the final
+                        code) ----> eg: the gui is still missing but it should have
+                        the same options.
+ 
+    -plot_snapshot:     plot an animation of the inputs of the ADC without any
+                        processing. It is usefull to look if the voltage levels
+                        stays in the suitable range
+
+    -plots:             Draw several types of plots reading at real time (at the
+                        network speed), eg spectrum at ADC0, spectrum at ADC1, 
+                        instantaneus phase, channel difference of powers, etc
+
+    -meas:              Class intended to make measurements at lab. We control
+                        two generators using visa and save the data with ROACH.
+                        And then calculate the correspondent statistics.
+
+    -generator:         Class to interface easily with the generators using visa
+    -visa_generator:    Function called by generator
+    -anritsu_generator: Function called by generator
+
+    -adc_clock:         Modify the Valon frequency and the reference, called by
+                        calan_vv
+    -ppc_save:          Contains the compilated code for the PowerPc inside 
+                        the ROACH. Its intended to save the data in the 
+                        microcontroller. 
+
+
+
+The ROACH models has the following registers wich you could communicate by using calan_vv.fpga and it methods (eg:write_int, read_int, read, etc)
+In the ROACH workflow the registers has only one direction ie input(I) or output(O):
+
+(There are a lot of them... i am going to completely fill this when i have time)
+'0save_A'               : (O)Is the first of twosave ADC0 magnitude at one channel, reading by PPC 
+
+ '0save_B'              : (O)save ADC1 magnitude at one channel, reading by PPC 
+ '0save_phase',         : (O)save the the correlation (re, im) at one channel, reading by PPC
+ '0save_time',          : (O) save the time of one measurement
+ '1_A2',                : ()
+ '1_B2',                :
+ '1save_A',             :
+ '1save_B',             :
+ '1save_phase',         :
+ '1save_time',          :
+ 'AB_im',               :
+ 'AB_re',               :
+ 'IRIG_1st_time',       :
+ 'IRIG_bott_count',     :
+ 'IRIG_cal',            :
+ 'IRIG_frec_downlim',   :
+ 'IRIG_frec_uplim',     :
+ 'IRIG_hrd_rst',        :
+ 'IRIG_in_frame',       :
+ 'IRIG_index',          :
+ 'IRIG_irig_0',         :
+ 'IRIG_irig_1',         :
+ 'IRIG_irig_pos_id',    :
+ 'IRIG_lock_test',      :
+ 'IRIG_reg_wait',       :
+ 'IRIG_sel_ind',        :
+ 'IRIG_terminate',      :
+ 'IRIG_threshold',      :
+ 'IRIG_top_count',      :
+ 'IRIG_try_again',      :
+ 'IRIG_waiting_in_vain',:
+ 'PowA',                :
+ 'PowB',                :
+ 'acc_len',             :
+ 'adc0_delay',          :
+ 'adc1_delay',          :
+ 'adc5g_controller',    :
+ 'adcsnap0_bram',       :
+ 'adcsnap0_ctrl',       :
+ 'adcsnap0_status',     :
+ 'adcsnap1_bram',       :
+ 'adcsnap1_ctrl',       :
+ 'adcsnap1_status',     :
+ 'addr2catch',          :
+ 'cnt_rst',             :
+ 'frac_sec',            :
+ 'full_mem0',           :
+ 'full_mem1',           :
+ 'lost_readings',       :
+ 'meas_rdy',            :
+ 'mux_sel',             :
+ 'n_points',            :
+ 'phase',               :
+ 'reading_data',        :
+ 'reading_data0',       :
+ 'reading_data1',       :
+ 'rst_save',            :
+ 'secs',                :
+ 'snap_trig',           :
+ 'state',               :
+ 'sync_gen_sync',       :
+ 'sync_gen_sync_period_sel',:
+ 'sync_gen_sync_period_var',:
+ 'sys_board_id',        :
+ 'sys_clkcounter',      :
+ 'sys_rev',             :
+ 'sys_rev_rcs',         :
+ 'sys_scratchpad',      :
+ 'unlock']              :
+    
+
+
+
+
+
+        
