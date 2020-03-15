@@ -127,7 +127,7 @@ class lab_measure():
         filename = 'data_'+time.asctime().replace(" ", "")
         os.mkdir(filename)
         os.chdir(filename)
-        self.fpga.write_int('mux_sel',1)
+        self.fpga.write_int('mux_sel',1) 
         self.fpga.write_int('n_points', self.n_points)
         
         #open files to write in

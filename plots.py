@@ -60,16 +60,19 @@ class plot_data():
                             'phase':['Relative Phase', ('['+u'\xb0'+']'), '[MHz]',
                                      (-180,180), (self.freq), ['AB_im', 'AB_re'], '>8192q'],
                             'chann_pow':['Relative Power at'+str(self.fft_freq[self.chann]),
-                                         '[dB]','[MHz]',(-180,180), self.freq,
+                                         '[dB]','[MHz]',(-180,180), (0, 8191),
                                          ['PowA', 'PowB'], '>8192Q'],
                             'chann_phase':['Relative phase at'+str(self.fft_freq[self.chann]),
                                         ('['+u'\xb0'+']'), '[MHz]',(-180,180), (0,8191),
                                         ['phase'], '>16384q']}
 
-        
-        self.create_plots()
-        anim = animation.FuncAnimation(self.fig, self.animate, blit=True)
-        plt.show()
+	self.fpga.write_int('mux_sel',0)
+	self.fpga.write_int('n_points', 16384)
+	self.fpga.write_int('reading_data',1)
+	self.fpga.write_int('reading_data',0)
+	self.create_plots()
+	anim = animation.FuncAnimation(self.fig, self.animate, blit=True)
+	plt.show()
         
 
         
@@ -101,7 +104,7 @@ class plot_data():
                 if(len(self.brams[i])==2):
                     data1 = struct.unpack('>8192Q', self.fpga.read(self.brams[i][0], 8192*8))
                     data2 = struct.unpack('>8192Q', self.fpga.read(self.brams[i][1], 8192*8)) 
-                    data = 10*(np.log10(np.array(data1+1.))-np.log10(np.array(data2+1.)))
+                    data = 10*(np.log10(np.array(data1+1.))-np.log10(np.array(data2+1.)))	
                 else:
                     data = struct.unpack('>8192Q', self.fpga.read(self.brams[i][0], 8192*8))
                     data = 10*np.log10(np.array(data)+1)
@@ -114,7 +117,7 @@ class plot_data():
                     data = struct.unpack('>8192q', self.fpga.read(self.brams[i][0], 8192*8))
 
             if(self.data_type[i]=='>16384q'):
-                phase = struct.unpack('>16384q',self.fpga.read(self.brams[i][0]),16384*8)
+                phase = struct.unpack('>16384q',self.fpga.read(self.brams[i][0],16384*8))
                 re = phase[::2]
                 im = phase[1::2]
                 data = np.rad2deg(np.arctan2(im, re)) 
@@ -126,7 +129,10 @@ class plot_data():
         dat = self.get_data()
         #ipdb.set_trace()
         for i in range(len(dat)):
-            self.data[i].set_data(self.fft_freq, dat[i])
+		if (self.plots[i]=='chann_pow' or self.plots[i]=='chann_phase'):
+			self.data[i].set_data(np.arange(8192), dat[i])
+		else:
+			self.data[i].set_data(self.fft_freq, dat[i])
         return self.data
 
 

@@ -1,3 +1,32 @@
+FIRST, SOME TIPS TO REMEMBER:
+	-The ADC saturates at -3dBm
+	-The clock of the ADC is given by the Valon. The sampling frequency of the ADC is the 
+	 double of the frequency at the Valon (The ADC samples at rising and falling edge)
+	-The fpga clock is the sampling frequency divided by 16.
+		So , for example: 
+			if the valon frequency is set to 1080MHz, the sampling frequenc
+	
+	
+	-The data given by the powerPC (PPC) is big endian (>)
+	-The magnitude data (like powA, 1_A2) has type unsigned longlong (in struct Q)
+	-The phase parameter (re, im) has type signed long long (in struct q)
+	-The time values (seconds and fractions of seconds) has type unsigned integer (I)
+	-There are some brams that save two values in one address, so you have to separate them
+	 and reinterpret correcty.
+			eg: phase is composed by 8 bytes of real part and 8 part of imaginary part in
+				each address.
+				So to read 100 values and reinterpret them, youre code should look like:
+					phase_val=struct.unpack('>'+str(100*2)+'q', fpga.read('phase', 100*8*2))
+					real_part = phase_val[::2]
+					imag_part = phase_val[1::2]
+
+			eg2: For the time values is the same, there are 4 bytes of seconds and
+			4 bytes for the fractions of seconds. So to read 100 values:
+    			time_val = struct.unpack('>'+str(2*100)+'I', fpga.read('time', 100*4))
+				seconds = time_val[::2]
+				frac_seconds = time_val[1::2]
+
+
 here we have a short description of each one of the files:
 
     -calan_vv:          contains the main class that calls the other scripts,
@@ -31,42 +60,81 @@ here we have a short description of each one of the files:
 
 
 
+
+
+
 The ROACH models has the following registers wich you could communicate by using calan_vv.fpga and it methods (eg:write_int, read_int, read, etc)
 In the ROACH workflow the registers has only one direction ie input(I) or output(O):
 
 (There are a lot of them... i am going to completely fill this when i have time)
-'0save_A'               : (O)Is the first of twosave ADC0 magnitude at one channel, reading by PPC 
 
- '0save_B'              : (O)save ADC1 magnitude at one channel, reading by PPC 
- '0save_phase',         : (O)save the the correlation (re, im) at one channel, reading by PPC
- '0save_time',          : (O) save the time of one measurement
- '1_A2',                : ()
- '1_B2',                :
- '1save_A',             :
- '1save_B',             :
- '1save_phase',         :
- '1save_time',          :
- 'AB_im',               :
- 'AB_re',               :
- 'IRIG_1st_time',       :
- 'IRIG_bott_count',     :
- 'IRIG_cal',            :
- 'IRIG_frec_downlim',   :
- 'IRIG_frec_uplim',     :
- 'IRIG_hrd_rst',        :
- 'IRIG_in_frame',       :
- 'IRIG_index',          :
- 'IRIG_irig_0',         :
- 'IRIG_irig_1',         :
- 'IRIG_irig_pos_id',    :
- 'IRIG_lock_test',      :
- 'IRIG_reg_wait',       :
- 'IRIG_sel_ind',        :
- 'IRIG_terminate',      :
- 'IRIG_threshold',      :
- 'IRIG_top_count',      :
- 'IRIG_try_again',      :
+-1st memory bank for the holography measure:
+ '0save_A'               : (O)save ADC0 magnitude at one channel, reading by PPC  					(size = 8192*8 bytes)
+ '0save_B'              : (O)save ADC1 magnitude at one channel, reading by PPC   					(size = 8192*8 bytes)
+ '0save_phase',         : (O)save the the correlation (re, im) at one channel, reading by PPC 		(size= 16384*8 bytes )
+ '0save_time',          : (O) save the time of one measurement (secs, frac_sec), reading by PPC    	(size= 8192*8 bytes)
+
+-2nd memory bank for the holography measure;
+ '1save_A',             : (O) save ADC0 magnitude at one channel, reading by PPC  					(size = 8192*8 bytes) 
+ '1save_B',             : (O) save ADC1 magnitude at one channel, reading by PPC  					(size = 8192*8 bytes)
+ '1save_phase',         : (O) save the the correlation (re, im) at one channel, reading by PPC 		(size = 16384*8 bytes)
+ '1save_time',          : (O) save the time of one measurement (secs, frac_sec), reading by PPC    	(size = 8192*8 bytes)
+
+-real time plots:
+ '1_A2',                : (O) storage of the full spectrum of ADC0 for all the fft channels, real time plot  				(size = 8192*8 bytes)
+ '1_B2',                : (O) storage of the full spectrum of ADC1 for all the fft channels, real time plot					(size = 8192*8 bytes)
+ 'AB_im',               : (O) storage of real part correlation for all the fft channels, real time plot    					(size = 8192*8 bytes)
+ 'AB_re',               : (O) storage of real part correlation for all the fft channels, real time plot                 	(size = 8192*8 bytes)
+
+-Irig registers
+
+ 'IRIG_1st_time',       : 
+ 'IRIG_bott_count',     : (I)
+ 'IRIG_cal',            : (I) enables the time calibration, should be put in zero and then in one to calibrate the system
+ 'IRIG_frec_downlim',   : (I) If the fraction of second counter has less than this value when a second has lapsed
+							  the system rise a flag. To be clear, in one second the counter should have a value near 
+							  the fpga clock. So it should be set to something like (1-error_threshold)*fpga_clock
+
+ 'IRIG_frec_uplim',     : (I) If the fraction of the second counter is higher than this value when a second has lapsed
+							  the system rise a flag. Should be set to something like (1+error_threshold)*fpga_clock
+
+ 'IRIG_hrd_rst',        : (I) reset the whole system, should be used at the begining of the calibration to take the system
+							  to known state.
+ 'IRIG_in_frame',       : (O) Rise a 1 if first value of the IRIG frame is detected
+ 'IRIG_index',          : (I) (For debbuging only) Gives the posibility to put the state machine in certain state
+
+ 'IRIG_irig_0',         : (I) Gives the duration of the 0 value of the IRIG code in cycles of the 
+							  fpga, the manual set into 0.2*bit time. For our case (IRIGB000) the bit time is 0.01s
+							  so it should be set to something like 0.01*0.2*fpga_clk*security_factor
+							  where the security factor is given to not be so strict.
+							  
+ 'IRIG_irig_1',         : (I) Gives the duration of the 1 value of IRIG code in cycles of the fpga
+							  the manual set in 0.5*bit time. Should be set to 0.01*0.5*fpga_clk*sec_factor
+
+ 'IRIG_irig_pos_id',    : (I) Gives the duration of the position identifier value of the IRIG code in
+							  cycles of the fpga, is important to detected the begining of the IRIG frame.
+							  The manual set into 0.8* bit time, so should be set to something like
+							   0.8*0.01*fpga_clk*sec_factor.
+
+ 'IRIG_lock_test',      : (O) Its a memory where you could store the fraction of second value when one second has
+						      lapsed. Could be used to measure the variation of the timestamp.
+
+ 'IRIG_reg_wait',       : (I) Parameter for the debouncer, cycles that the input should remain in high to detected as a 1.
+							  The reson behind this is that the GPIO present some some variation in the rising edge and
+							  falling edge.
+
+ 'IRIG_sel_ind',        : (I) (For debbuging only) Gives the posibility to put a state machine in a given state.
+ 'IRIG_terminate',      : (O) Rise a 1 when the calibration of the timestamp is ready
+ 'IRIG_threshold',      : (I) Parameter for the debouncer, cycles that the input should remain in low to detected as 0.
+ 'IRIG_top_count',      : ()
+ 'IRIG_try_again',      : (I) Reset the counter that gives the address to lock_test. It also enables rise down the flag
+							  in the unlock register. Usually at first second the fraction of second has a lower value 
+							  so is good to reset the unlock at the begining.
+							  
  'IRIG_waiting_in_vain',:
+
+
+
  'PowA',                :
  'PowB',                :
  'acc_len',             :
