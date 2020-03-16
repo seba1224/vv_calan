@@ -6,7 +6,7 @@ import telnetlib
 import ipdb
 from meas import lab_measure
 from plots import plot_data
-
+from parse_raw import parse_raw
 
 
 class calan_vv(object):    
@@ -206,7 +206,7 @@ class calan_vv(object):
         self.fpga.write_int('addr2catch', chann)                       #select the channel to save in the ppc
         bram_addr = 8192.
         bram_period = self.fft_size*bram_addr*self.n_acc/(self.fpga_clk*10**6)*2 #we have two banks
-        read_cycles = int(duration*60./bram_period)
+        self.read_cycles = int(duration*60./bram_period)
         user = 'root'
         self.tn = telnetlib.Telnet(self.IP)
         self.tn.read_until("login: ")
@@ -217,7 +217,7 @@ class calan_vv(object):
         self.tn.write('cd /var/tmp\n')
         time.sleep(0.5)
         self.tn.read_very_eager()
-        self.tn.write('busybox nohup ./ppc_save '+str(read_cycles+1)+' &\n') #TODO:check the time consistency, ie if it could run without the connection
+        self.tn.write('busybox nohup ./ppc_save '+str(self.read_cycles+1)+' &\n') #TODO:check the time consistency, ie if it could run without the connection
         time.sleep(0.5)
         print(self.tn.read_very_eager())
 	self.tn.close()
@@ -348,11 +348,17 @@ class calan_vv(object):
         bw: is the complete bandwith of the FFT.
         """
         plot_data(self.fpga, plots, chann, freq, bw)
-            
 
+	
 
-
-
+	def parse_raw_data(self, filename='data', n_reading=None):
+		"""
+		
+		"""
+		if(n_reading==None):
+			parse_raw(filename, self.read_cycles*2)  #check the 2 factor
+		else:
+			parse_raw(filename, n_reading)
 
             
     
