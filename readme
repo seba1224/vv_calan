@@ -81,10 +81,40 @@ In the ROACH workflow the registers has only one direction ie input(I) or output
  '1save_time',          : (O) save the time of one measurement (secs, frac_sec), reading by PPC    	(size = 8192*8 bytes)
 
 -real time plots:
+ 	-full spectrum:
  '1_A2',                : (O) storage of the full spectrum of ADC0 for all the fft channels, real time plot  				(size = 8192*8 bytes)
  '1_B2',                : (O) storage of the full spectrum of ADC1 for all the fft channels, real time plot					(size = 8192*8 bytes)
  'AB_im',               : (O) storage of real part correlation for all the fft channels, real time plot    					(size = 8192*8 bytes)
  'AB_re',               : (O) storage of real part correlation for all the fft channels, real time plot                 	(size = 8192*8 bytes)
+
+	-one channel:
+ 'addr2catch',          : (I) channel number that you want to save, it saves in powA, powB, phase to read in real time
+						     It give the channel number to be storage in the powerPC
+ 'n_points',            : (I) number of points saved in the fpga memory to deploy the evolution in time of the channel.
+ 'mux_sel',             : (I) selects the type of counter used to give the address to the memories of the channel data.
+							  set 0 to use a free running counter, so when the counter 
+
+
+ 'meas_rdy',            : (O) rise a 1 when the measurment is ready, to use with mux_sel in one, so you could reset the address counter
+ 'PowA',                : (O) memory that saves the power of the ADC0 at the channel given in addr2save  					(size = 8192*8 bytes)
+ 'PowB',                : (O) memory that saves the power of the ADC1 at the channel given in addr2save						(size = 8192*8 bytes)
+ 'phase',               : (O) memory that saves the real and imaginary part of the correlation of the channel
+							  given in addr2catch. The data is interleaved, so the odd index correpond to the real
+							  part and the even index correpond to the imaginary part.										(size = 8192*8*2 bytes)
+ 
+
+-ADC oscillogram
+ 'snap_trig',           : (I) trigger to start the ADC measuring
+ 
+ The following register are access by the corr function snapshot_get
+
+ 'adcsnap0_bram',       : (O) contains the data taken at the ADC0 
+ 'adcsnap0_ctrl',       : (I)
+ 'adcsnap0_status',     : (O) 
+ 'adcsnap1_bram',       : (O) contains the data taken at the ADC1
+ 'adcsnap1_ctrl',       : (I)
+ 'adcsnap1_status',     : (O)
+
 
 -Irig registers
 
@@ -131,42 +161,35 @@ In the ROACH workflow the registers has only one direction ie input(I) or output
 							  in the unlock register. Usually at first second the fraction of second has a lower value 
 							  so is good to reset the unlock at the begining.
 							  
- 'IRIG_waiting_in_vain',:
+ 'IRIG_waiting_in_vain',: (I)
 
 
 
- 'PowA',                :
- 'PowB',                :
- 'acc_len',             :
- 'adc0_delay',          :
- 'adc1_delay',          :
- 'adc5g_controller',    :
- 'adcsnap0_bram',       :
- 'adcsnap0_ctrl',       :
- 'adcsnap0_status',     :
- 'adcsnap1_bram',       :
- 'adcsnap1_ctrl',       :
- 'adcsnap1_status',     :
- 'addr2catch',          :
- 'cnt_rst',             :
- 'frac_sec',            :
+
+
+ 'acc_len',             : (I) set the accumulation number (related to the integration time)
+ 'adc0_delay',          : (I) set the delay of the ADC0 samples in order to be in phase with the 
+						  samples of the ADC1 (used in the synchornization function)
+ 'adc1_delay',          : (I) set the delay of the ADC1 samples in order to be in phase with the 
+						  samples of the ADC0 (used in the synchornization function)
+ 'cnt_rst',             : (I) set a 1 to restart the FFT and 0 to enable it.
+
+
+
+ 'frac_sec',            : 
  'full_mem0',           :
  'full_mem1',           :
  'lost_readings',       :
- 'meas_rdy',            :
- 'mux_sel',             :
- 'n_points',            :
- 'phase',               :
  'reading_data',        :
  'reading_data0',       :
  'reading_data1',       :
  'rst_save',            :
  'secs',                :
- 'snap_trig',           :
  'state',               :
  'sync_gen_sync',       :
  'sync_gen_sync_period_sel',:
  'sync_gen_sync_period_var',:
+ 'adc5g_controller',    : (I) internal register of the ADC gateway to the OPB bus
  'sys_board_id',        :
  'sys_clkcounter',      :
  'sys_rev',             :

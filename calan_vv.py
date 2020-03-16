@@ -171,11 +171,15 @@ class calan_vv(object):
         #ipdb.set_trace()
         time.sleep(1)
         self.tn.write('cd /var/tmp\n')
+	time.sleep(2)
         self.tn.read_very_eager()
-        for i in range(5):
+	self.tn.write('rm *\n')
+	time.sleep(2)
+	self.tn.read_very_eager()
+        for i in range(3):
             self.tn.write('nc -l -p 1234 > ppc_save \n')
             os.system('nc -w 3 '+str(self.IP)+' 1234 < '+file_path)
-            time.sleep(1) 
+            time.sleep(3) 
             self.tn.read_very_eager()
             self.tn.write("ls\n")
             time.sleep(0.5)
@@ -183,12 +187,12 @@ class calan_vv(object):
             if(ans.find("ppc_save")!=-1):
                 break
         
-        if(i==4):
+        if(i==3):
             raise RuntimeError('The file couldnt get upload..')
         time.sleep(0.5)
         self.tn.read_very_eager()
         self.tn.write('chmod +x ppc_save \n')
-        time.sleep(0.5)
+        time.sleep(1)
         self.tn.read_very_eager()
         self.tn.write('touch save \n')
         self.tn.read_very_eager()
@@ -213,10 +217,10 @@ class calan_vv(object):
         self.tn.write('cd /var/tmp\n')
         time.sleep(0.5)
         self.tn.read_very_eager()
-        self.tn.write('./ppc_save '+str(read_cycles+1)+'\n') #TODO:check the time consistency, ie if it could run without the connection
+        self.tn.write('busybox nohup ./ppc_save '+str(read_cycles+1)+' &\n') #TODO:check the time consistency, ie if it could run without the connection
         time.sleep(0.5)
         print(self.tn.read_very_eager())
-
+	self.tn.close()
     
     
     def ppc_download(self, pc_IP):
@@ -229,11 +233,14 @@ class calan_vv(object):
         time.sleep(1)
         self.tn.read_very_eager()
         self.tn.write('cd /var/tmp\n')
+	time.sleep(3)
         self.tn.read_very_eager()
-        ipdb.set_trace()
-        os.system('nc -l -p 1234 > data &') ##there is a bugg here, the terminal hangs up...REVIEW!!!
-        self.tn.write('nc -w 3 '+str(pc_IP)+' 1234 < save')
-    
+        #ipdb.set_trace()
+        os.system('nohup nc -l -p 1234 > raw_data &') ##there is a bugg here, the terminal hangs up...REVIEW!!!
+        self.tn.write('busybox nohup nc -w 3 '+str(pc_IP)+' 1234 < save &\n')
+    	time.sleep(3)
+	self.tn.read_very_eager()
+	self.tn.close()
 
 
 
